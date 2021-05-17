@@ -72,13 +72,21 @@ public:
     }
 
 };
+/*
+ * двумерный массив - значение объект как вариант
+ *
+ * либо список заменить на сет
+ *
+ */
 class Fire : public Object {
     int explosion_time;
+    int box_type = 0;
 public:
 
-    Fire(int X, int Y)
+    Fire(int X, int Y, int box_type_prev)
         : Object(X, Y){
         explosion_time = 2;
+        box_type = box_type_prev;
         TileMap[y][x] = FIRE_CONST;
     }
 
@@ -94,7 +102,20 @@ public:
         return "Fire";
     }
     ~Fire() {
-        TileMap[y][x] = VOID_CONST;
+        switch(box_type) {
+            case 0:
+            case 1:
+                TileMap[y][x] = VOID_CONST;
+                break;
+            case 2:
+                TileMap[y][x] = SPDBUFF_CONST;
+                break;
+            case 3:
+                TileMap[y][x] = FBUFF_CONST;
+                break;
+            default:
+                std::cout << "Incorrect box_type in fire destructor" << std::endl;
+        }
     }
     int getFireBuff() {return 0;}
 };
@@ -122,12 +143,15 @@ private:
 
     Texture texture;
 
+    std::map <sf::String, sf::Keyboard::Key> controlKeys;
+
+
 
 public:
 
 
     Sprite sprite;
-    Player(const String& F, float X, float Y, float W, float H) {
+    Player(const String& F, float X, float Y, float W, float H, sf::String keys_type) {
         life = true;
         dx = 0;
         dy = 0;
@@ -143,9 +167,25 @@ public:
         x = X;
         y = Y;
         sprite.setTextureRect(IntRect(0, 0, width, height));
+        if (keys_type == "WASD") {
+            controlKeys["Right"] = sf::Keyboard::D;
+            controlKeys["Left"]  = sf::Keyboard::A;
+            controlKeys["Up"]    = sf::Keyboard::W;
+            controlKeys["Down"]  = sf::Keyboard::S;
+            controlKeys["Plant"] = sf::Keyboard::LShift;
+        }
+        else if (keys_type == "ARROWS") {
+            controlKeys["Right"] = sf::Keyboard::Right;
+            controlKeys["Left"]  = sf::Keyboard::Left;
+            controlKeys["Up"]    = sf::Keyboard::Up;
+            controlKeys["Down"]  = sf::Keyboard::Down;
+            controlKeys["Plant"] = sf::Keyboard::RShift;
+        }
+        else
+            std::cout << "Unknown keys setup" << std::endl;
     }
     void update(float time);
-    void keyboardReact(float &Frame, float time);
+    void keyboardReact(float &Frame, float time, std::list <Object*> &bomb_map, sf::Event& event);
     void mapInteract();
     float getCoordinateX()  const {return x;}
     float getCoordinateY()  const {return y;}
@@ -160,12 +200,17 @@ public:
 
 
 
-void Player::keyboardReact(float &Frame, float time) {
+void Player::keyboardReact(float &Frame, float time, std::list <Object*> &bomb_map, sf::Event& event) {
 
     if (life == false ) { return; }
+    if (event.type == sf::Event::KeyPressed) {
+        if (event.key.code == controlKeys["Plant"]) {
+            bomb_map.push_back(plantBomb());
+        }
+    }
 /////////////////////////////////////////////////////////
 // move control buttons
-    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Right) || (sf::Keyboard::isKeyPressed(sf::Keyboard::D)))) {
+    if (sf::Keyboard::isKeyPressed(controlKeys["Right"]) ) {
         direction = 0;
         speed = PL_SPEED * speed_buff;
         Frame += PL_ANIMATION * time;
@@ -175,7 +220,7 @@ void Player::keyboardReact(float &Frame, float time) {
         //getPlayerCoordinateForView(getCoordinateX(), getCoordinateY());
         //to make camera independent it centers on player only after key pressed
     }
-    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Up) || (sf::Keyboard::isKeyPressed(sf::Keyboard::W)))) {
+    if (sf::Keyboard::isKeyPressed(controlKeys["Up"]) ) {
         direction = 1;
         speed = PL_SPEED * speed_buff;
         Frame += PL_ANIMATION * time;
@@ -185,7 +230,7 @@ void Player::keyboardReact(float &Frame, float time) {
         //getPlayerCoordinateForView(getCoordinateX(), getCoordinateY());
         //to make camera independent it centers on player only after key pressed
     }
-    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Left) || (sf::Keyboard::isKeyPressed(sf::Keyboard::A)))) {
+    if (sf::Keyboard::isKeyPressed(controlKeys["Left"]) ) {
         direction = 2;
         speed = PL_SPEED * speed_buff;
         Frame += PL_ANIMATION * time;
@@ -208,7 +253,7 @@ void Player::keyboardReact(float &Frame, float time) {
     */
     //////////////////////////////
 
-    if ((sf::Keyboard::isKeyPressed(sf::Keyboard::Down) || (sf::Keyboard::isKeyPressed(sf::Keyboard::S)))) {
+    if (sf::Keyboard::isKeyPressed(controlKeys["Down"])) {
         direction = 3;
         speed = PL_SPEED * speed_buff;
         Frame += PL_ANIMATION * time;
@@ -220,11 +265,11 @@ void Player::keyboardReact(float &Frame, float time) {
     }
 //////////////////////////////////////
 
-    if (sf::Keyboard::isKeyPressed(sf::Keyboard::Space)) {
+    /*if (sf::Keyboard::isKeyPressed(controlKeys["Plant"])) {
 
 
 
-    }
+    }*/
 
 }
 void Player::update(float time) {
@@ -259,7 +304,8 @@ void Player::update(float time) {
 void Player::mapInteract() {
     for (int i = y / MAP_COMM_SIZE; i < (y + height) / MAP_COMM_SIZE; i++)
         for (int j = x / MAP_COMM_SIZE; j< (x + width) / MAP_COMM_SIZE; j++) {
-            if (TileMap[i][j] == EDGE_CONST) {
+            if (TileMap[i][j] == EDGE_CONST || TileMap[i][j] == BOX_CONST
+            || TileMap[i][j] == SPDBUFF_BOX_CONST || TileMap[i][j] == FBUFF_BOX_CONST) {
                 if (dy > 0) {
                     y = i * MAP_COMM_SIZE - height;
                 }
@@ -274,10 +320,15 @@ void Player::mapInteract() {
                 }
             }
 
-            if (TileMap[i][j] == BOX_CONST) {
+            if (TileMap[i][j] == FBUFF_CONST) {
                 fire_buff += 1;
                 TileMap[i][j] = VOID_CONST;
             }
+            if (TileMap[i][j] == SPDBUFF_CONST) {
+                speed_buff += PL_SPEED;
+                TileMap[i][j] = VOID_CONST;
+            }
+
             if (TileMap[i][j] == FIRE_CONST) {
                 life = false;
             }
