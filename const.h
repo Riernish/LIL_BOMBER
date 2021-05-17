@@ -8,6 +8,7 @@
 #include <iostream>
 #include <list>
 #include <iterator>
+#include <map>
 
 #define WINDOW_COMM_SIZE 100
 #define WINDOW_WIDTH 16 * WINDOW_COMM_SIZE
