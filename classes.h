@@ -274,6 +274,10 @@ void Player::keyboardReact(float &Frame, float time, std::list <Object*> &bomb_m
 }
 void Player::update(float time) {
 
+    if (life == false) {
+        view.rotate(0.1);
+    }
+
     switch(direction) {
         case 0:
             dx = speed;
