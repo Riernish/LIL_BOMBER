@@ -1,6 +1,3 @@
-//
-// Created by iliya on 18.05.2021.
-//
 
 void menu(RenderWindow & window) {
     Texture menuTexture1, menuTexture2, menuTexture3, aboutTexture, menuBackground;

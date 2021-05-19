@@ -1,7 +1,3 @@
-//
-// Created by iliya on 18.05.2021.
-//
-
 
 #include "const.h"
 #include "classes.h"
