@@ -1,4 +1,6 @@
 
+#define MENU_MUSIC "source/music/menu_brawl.ogg"
+
 void menu(RenderWindow & window) {
     Texture menuTexture1, menuTexture2, menuTexture3, aboutTexture, menuBackground;
     menuTexture1.loadFromFile("source/menu/menu_images/111.png");
@@ -13,6 +15,13 @@ void menu(RenderWindow & window) {
     menu2.setPosition(1300, 90);
     menu3.setPosition(1300, 150);
     menuBg.setPosition(0, 0);
+
+    sf::Music music;
+    music.openFromFile(MENU_MUSIC);
+    music.setVolume(70);
+    music.play();
+    music.setLoop(true);
+
 
 
     while (isMenu)

@@ -6,6 +6,7 @@
 #include <algorithm>
 
 
+
 void draw_map(sf::Sprite &map, sf::RenderWindow &window);
 void check_bombs(std::list <Object*>& objects, int fire_buff);
 void make_fire  (std::list <Object*>& objects, Object* item, int fire_buff);
@@ -16,17 +17,29 @@ void generateMap();
 #define TIME_CONSTANT_WE_CAN_ALLOW 1400
 
 #define END_PATH "source/images/endgame.jpg"
+#define MAIN_MUSIC "source/music/derevna_durakov.ogg"
+#define VICTORY_MUSIC "source/music/victory.ogg"
 
 bool startGame() {
 
     generateMap();
-
 
     sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "SFML works!", sf::Style::Fullscreen);
 
     // , sf::Style::Fullscreen
 
     menu(window);
+
+    sf::Music music;
+    music.openFromFile(MAIN_MUSIC);
+    music.setVolume(50);
+    music.play();
+    music.setLoop(true);
+
+    sf::Music victory_music;
+    victory_music.openFromFile(VICTORY_MUSIC);
+
+
 
 
     view.reset(sf::FloatRect(0, 0, WINDOW_WIDTH, WINDOW_HEIGHT));
@@ -113,10 +126,16 @@ bool startGame() {
         window.clear(Color(128,106,89)); // color to fill my emptiness
         draw_map(map_sprite, window);
         int flag = win_1 * 1 + win_2 * 2;
-        if (flag_saved == 3 && flag != 0)
+        if (flag_saved == 3 && flag != 3) {
             flag_saved = flag;
+            music.stop();
+            victory_music.play();
+            victory_music.setLoop(true);
+
+        }
         switch (flag_saved) {
             case 1:
+
                 text.setString("Blue wins!!!");
                 flag_saved = 1;
                 text.setPosition(500, 300);
@@ -126,6 +145,7 @@ bool startGame() {
                 window.draw(text);
                 break;
             case 2:
+
                 text.setString("Red wins!!!");
                 flag_saved = 2;
                 text.setPosition(500, 300);
