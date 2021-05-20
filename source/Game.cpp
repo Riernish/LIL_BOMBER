@@ -8,7 +8,7 @@
 
 
 void draw_map(sf::Sprite &map, sf::RenderWindow &window);
-void check_bombs(std::list <Object*>& objects, int fire_buff);
+void check_objects(std::list <Object*>& objects, int fire_buff);
 void make_fire  (std::list <Object*>& objects, Object* item, int fire_buff);
 
 void gameRunning();
@@ -20,11 +20,19 @@ void generateMap();
 #define MAIN_MUSIC "source/music/derevna_durakov.ogg"
 #define VICTORY_MUSIC "source/music/victory.ogg"
 
+
+/*
+ *
+ * main function of this game
+ * returns true if restart button pressed
+ * returns false otherwise
+ *
+ */
 bool startGame() {
 
     generateMap();
 
-    sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "SFML works!", sf::Style::Fullscreen);
+    sf::RenderWindow window(sf::VideoMode(WINDOW_WIDTH, WINDOW_HEIGHT), "LIL BOMBER", sf::Style::Fullscreen);
 
     // , sf::Style::Fullscreen
 
@@ -83,7 +91,7 @@ bool startGame() {
 
     std::list <Object*> bomb_map;
 
-    window.setKeyRepeatEnabled(false);
+    window.setKeyRepeatEnabled(false); //disable repetitions
 
     while (window.isOpen()) {
 
@@ -95,14 +103,6 @@ bool startGame() {
         while (window.pollEvent(event)) {
             if (event.type == sf::Event::Closed)
                 window.close();
-            /*if (event.type == sf::Event::KeyPressed) {
-                if (event.key.code == sf::Keyboard::Space) {
-                    bomb_map.push_back(hero_2.plantBomb());
-                }
-                if (event.key.code == sf::Keyboard::LShift) {
-                    bomb_map.push_back(hero_1.plantBomb());
-                }
-            }*/
         }
 
         if (Keyboard::isKeyPressed(Keyboard::Tab)) { return true; }//restart game
@@ -114,7 +114,6 @@ bool startGame() {
         check_bombs(bomb_map, hero_1.getFireBuff());
         check_bombs(bomb_map, hero_2.getFireBuff());
 
-        //std::cout << bomb_map.size() << std::endl;
         win_1 = hero_1.update(time);
         win_2 = hero_2.update(time);
 
@@ -124,9 +123,10 @@ bool startGame() {
         viewChange();
 
         window.clear(Color(128,106,89)); // color to fill my emptiness
+
         draw_map(map_sprite, window);
         int flag = win_1 * 1 + win_2 * 2;
-        if (flag_saved == 3 && flag != 3) {
+        if (flag_saved == 3 && flag != 3) { // to show victory message
             flag_saved = flag;
             music.stop();
             victory_music.play();
@@ -197,25 +197,14 @@ void draw_map(sf::Sprite &map, sf::RenderWindow &window) {
         }
 }
 
-/*void check_bombs(std::list <Object*>& objects, int fire_buff) {
-    std::list<Object*> new_objects;
-
-    for (auto it = objects.begin(); it != objects.end(); ++it) {
-        auto item = (*it);
-        if (item->isExploded()) {
-            if (item->getClassName() == "Bomb")
-                make_fire(new_objects, item, item->getFireBuff());
-            delete item;
-        } else {
-            new_objects.push_back(item);
-        }
-    }
-
-    objects.clear();
-    objects = new_objects;
-}*/
-
-void check_bombs(std::list <Object*>& objects, int fire_buff) {
+/*
+ *
+ * checks bombs and fire
+ * if they explode
+ * deletes them
+ *
+ */
+void check_objects(std::list <Object*>& objects, int fire_buff) {
 
     auto it_new_end = std::remove_if(objects.begin(), objects.end(), [&objects, fire_buff](Object* item) {
         bool res = item ->isExploded();
@@ -232,16 +221,6 @@ void check_bombs(std::list <Object*>& objects, int fire_buff) {
 
     objects.erase(it_new_end, objects.end());
 
-    /*for (it = objects.begin(); it != objects.end(); it++) {
-        if ((*it).isExploded()) {
-            int x = (*it).x;
-            int y = (*it).y;
-            TileMap[y][x] = ' ';
-            it = objects.erase(it);
-            it--;
-        }
-
-    }*/
 
 }
 
@@ -365,10 +344,7 @@ void make_fire( std::list <Object*>& objects, Object*item, int fire_buff) {
             break;
         stop_now = true;
     }
-    /*
-     * Создать треды тута !!!!1
-     *
-     */
+
 }
 
 void gameRunning() {
@@ -383,7 +359,8 @@ void generateMap() {
             TileMap[i][j] = TileMap_original[i][j];
             if (TileMap[i][j] == BOX_CONST) {
                 unsigned marvel = mersenne() % 10;
-                switch (marvel) {
+                switch (marvel) {//here you can work with probabilities
+                    case 0:
                     case 1:
                     case 2:
                     case 3:

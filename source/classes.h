@@ -41,7 +41,7 @@ public:
 
 class Bomb : public Object {
     int explosion_time;
-    int fire_buff = 1;
+    int fire_buff = 1;//size of plus-formed fire trace
 public:
 
     Bomb(int X, int Y)
@@ -72,12 +72,7 @@ public:
     }
 
 };
-/*
- * двумерный массив - значение объект как вариант
- *
- * либо список заменить на сет
- *
- */
+
 class Fire : public Object {
     int explosion_time;
     int box_type = 0;
@@ -200,7 +195,13 @@ public:
 
 
 
-
+/*
+ *
+ * hero control interface
+ * moving with 3 allowed frames
+ * to make movement mote real
+ *
+ */
 
 void Player::keyboardReact(float &Frame, float time, std::list <Object*> &bomb_map, sf::Event& event) {
 
@@ -210,7 +211,7 @@ void Player::keyboardReact(float &Frame, float time, std::list <Object*> &bomb_m
             bomb_map.push_back(plantBomb());
         }
     }
-/////////////////////////////////////////////////////////
+////////////////////////////////////
 // move control buttons
     if (sf::Keyboard::isKeyPressed(controlKeys["Right"]) ) {
         direction = 0;
@@ -219,8 +220,6 @@ void Player::keyboardReact(float &Frame, float time, std::list <Object*> &bomb_m
         if (Frame > 3) Frame -= 3;
         sprite.setTextureRect(IntRect(int(width * int(Frame)),
                                       2 * height, int(width), int(height)));
-        //getPlayerCoordinateForView(getCoordinateX(), getCoordinateY());
-        //to make camera independent it centers on player only after key pressed
     }
     if (sf::Keyboard::isKeyPressed(controlKeys["Up"]) ) {
         direction = 1;
@@ -229,31 +228,17 @@ void Player::keyboardReact(float &Frame, float time, std::list <Object*> &bomb_m
         if (Frame > 3) Frame -= 3;
         sprite.setTextureRect(IntRect(int(width * int(Frame)),
                                       3 * height, int(width), int(height)));
-        //getPlayerCoordinateForView(getCoordinateX(), getCoordinateY());
-        //to make camera independent it centers on player only after key pressed
+
     }
-    if (sf::Keyboard::isKeyPressed(controlKeys["Left"]) ) {
+    if (sf::Keyboard::isKeyPressed(controlKeys["Left"]) ) { // if sprite not square check this function
         direction = 2;
         speed = PL_SPEED * speed_buff;
         Frame += PL_ANIMATION * time;
         if (Frame > 3) Frame -= 3;
         sprite.setTextureRect(IntRect(int(height * int(Frame)),
                                       int(width), int(height), int(width)));
-        //getPlayerCoordinateForView(getCoordinateX(), getCoordinateY());
-        //to make camera independent it centers on player only after key pressed
+
     }
-    //////////////////////////////
-    /*
-
-
-    НЕ ЗАБЫТЬ ПРОВЕРИТЬ СООТВЕТСТВИЕ WIDTH И HEIGHT
-    ВОЗМОЖНО ПРИДЕТСЯ ПОМЕНЯТЬ ИХ МЕСТАМИ
-    В ФУНКЦИИ НАЛЕВО УЖЕ ИЗМЕНЕНЫ МЕСТАМИ ЧТОБЫ ПРИ ТЕСТАХ ЗАМЕТИТЬ
-    ПРОВЕРИТЬ НА НЕКВАДРАТНЫХ СПРАЙТАХ
-    ПРИ ТЕСТАХ НА КВАДРАТНОМ ВРОДЕ КАК НАДО ЛЕВУЮ ФУНКЦИЮ СДЕЛАТЬ КАК ОСТАЛЬНЫЕ
-
-    */
-    //////////////////////////////
 
     if (sf::Keyboard::isKeyPressed(controlKeys["Down"])) {
         direction = 3;
@@ -262,16 +247,9 @@ void Player::keyboardReact(float &Frame, float time, std::list <Object*> &bomb_m
         if (Frame > 3) Frame -= 3;
         sprite.setTextureRect(IntRect(int(width * int(Frame)),
                                       0 * height, int(width), int(height)));
-        //getPlayerCoordinateForView(getCoordinateX(), getCoordinateY());
-        //to make camera independent it centers on player only after key pressed
+
     }
 //////////////////////////////////////
-
-    /*if (sf::Keyboard::isKeyPressed(controlKeys["Plant"])) {
-
-
-
-    }*/
 
 }
 bool Player::update(float time) {
@@ -311,7 +289,7 @@ void Player::mapInteract() {
     for (int i = y / MAP_COMM_SIZE; i < (y + height) / MAP_COMM_SIZE; i++)
         for (int j = x / MAP_COMM_SIZE; j< (x + width) / MAP_COMM_SIZE; j++) {
             if (TileMap[i][j] == EDGE_CONST || TileMap[i][j] == BOX_CONST
-            || TileMap[i][j] == SPDBUFF_BOX_CONST || TileMap[i][j] == FBUFF_BOX_CONST) {
+            || TileMap[i][j] == SPDBUFF_BOX_CONST || TileMap[i][j] == FBUFF_BOX_CONST) { //blocks you cant go on
                 if (dy > 0) {
                     y = i * MAP_COMM_SIZE - height;
                 }
@@ -326,16 +304,16 @@ void Player::mapInteract() {
                 }
             }
 
-            if (TileMap[i][j] == FBUFF_CONST) {
+            if (TileMap[i][j] == FBUFF_CONST) {//fire buff
                 fire_buff += 1;
                 TileMap[i][j] = VOID_CONST;
             }
-            if (TileMap[i][j] == SPDBUFF_CONST) {
+            if (TileMap[i][j] == SPDBUFF_CONST) {// speed buff
                 speed_buff += PL_DEF_SPDBUFF;
                 TileMap[i][j] = VOID_CONST;
             }
 
-            if (TileMap[i][j] == FIRE_CONST) {
+            if (TileMap[i][j] == FIRE_CONST) {//the only way to die soon
                 life = false;
             }
         }
@@ -347,6 +325,5 @@ Bomb* Player::plantBomb() const {
     int j = (int(x) + int(width)  / 2 ) / MAP_COMM_SIZE;
     Bomb* bomb_ptr = new Bomb(j, i);
     bomb_ptr->setFireBuff(getFireBuff());
-    //std::cout << "planted" << std::endl;
     return bomb_ptr;
 }
